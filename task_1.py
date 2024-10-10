@@ -27,8 +27,6 @@ def parse_folder(source_path, dest_path):
                 # Сортуємо файли за розширеннями
                 file_extension = element.suffix[1:]  # отримуємо розширення файлу без крапки
                 new_dir = dest_path / file_extension
-                # print(f"Parse folder: This is file - {element.name}")
-                # yield element
                 if not new_dir.exists():
                     new_dir.mkdir(parents=True, exist_ok=True)
                 # Копіюємо файл у нову директорію
@@ -46,16 +44,13 @@ def main():
             print("Будь ласка, введіть шлях до вихідної директорії.")
             continue
 
-        # source_path = Path(sys.argv[1])
         source_path = Path(args[0])
 
         # Встановлюємо директорію призначення, за замовчуванням - 'dist'
-        # dest_path = Path(sys.argv[2]) if len(sys.argv) > 2 else Path('dist')
         dest_path = Path(args[1]) if len(args) > 1 else Path('dist')
 
         if not source_path.exists() or not source_path.is_dir():
             print("Вказаний шлях до вихідної директорії неправильний або не існує.")
-            # sys.exit(1)
             continue
         if not dest_path.exists():
             dest_path.mkdir(parents=True, exist_ok=True)
