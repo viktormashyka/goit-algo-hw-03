@@ -14,47 +14,62 @@
 # Файл з відповідним типом має бути скопійований у відповідну піддиректорію.
 # 4. Обробка винятків. Код має правильно обробляти винятки, наприклад, помилки доступу до файлів або директорій.
 
-import os
+import shutil
 from pathlib import Path
 
-if not os.path.exists('dist'):
-    os.mkdir('dist')
-def parse_folder(path):
-    for element in path.iterdir():
-        if element.is_dir():
-            print(f"Parse folder: This is folder - {element.name}")
-            parse_folder(element)
-        if element.is_file():
-            print(f"Parse folder: This is file - {element.name}")
-            yield element
+def parse_folder(source_path, dest_path):
+    try:
+        for element in source_path.iterdir():
+            if element.is_dir():
+                # Якщо елемент є папкою, викликаємо функцію рекурсивно
+                parse_folder(element, dest_path)
+            elif element.is_file():
+                # Сортуємо файли за розширеннями
+                file_extension = element.suffix[1:]  # отримуємо розширення файлу без крапки
+                new_dir = dest_path / file_extension
+                # print(f"Parse folder: This is file - {element.name}")
+                # yield element
+                if not new_dir.exists():
+                    new_dir.mkdir(parents=True, exist_ok=True)
+                # Копіюємо файл у нову директорію
+                shutil.copy2(element, new_dir / element.name)
+                print(f"Файл {element.name} скопійовано до {new_dir}")
+    except Exception as e:
+        print(f"Помилка під час обробки: {e}")
 
-def move_file(file_path, new_path='dist'):
-    new_path = Path(new_path)
-    if not new_path.exists():
-        new_path.mkdir(parents=True, exist_ok=True)
-    for file in file_path:
-        destination = new_path / file.name
-        print(f"Move file: Moving {file} to {destination}")
-        file.rename(destination)
-
-if __name__ == "__main__":
+def main():
     while True:
         user_input = input("Введіть шлях: ")
         args = user_input.lower().split()
+
         if len(args) < 1:
-            print("Введіть шлях до вихідної директорії та шлях до директорії призначення.")
+            print("Будь ласка, введіть шлях до вихідної директорії.")
             continue
-        parent_folder_path = Path(args[0])
-        if not parent_folder_path.exists():
-            print("Введіть існуючий шлях.")
+
+        # source_path = Path(sys.argv[1])
+        source_path = Path(args[0])
+
+        # Встановлюємо директорію призначення, за замовчуванням - 'dist'
+        # dest_path = Path(sys.argv[2]) if len(sys.argv) > 2 else Path('dist')
+        dest_path = Path(args[1]) if len(args) > 1 else Path('dist')
+
+        if not source_path.exists() or not source_path.is_dir():
+            print("Вказаний шлях до вихідної директорії неправильний або не існує.")
+            # sys.exit(1)
             continue
-        new_path = Path(args[1]) if len(args) > 1 else Path('dist')
-        file = parse_folder(parent_folder_path)
-        move_file(file, new_path)
-        
+        if not dest_path.exists():
+            dest_path.mkdir(parents=True, exist_ok=True)
+
+        # Рекурсивно обробляємо вихідну директорію
+        parse_folder(source_path, dest_path)
+        print("Копіювання завершено.")
+
         action = input("Введіть 'q' для виходу або будь-яку клавішу для продовження: ")
         if action == 'q':
             print("Програма завершена.")
             break
         else:
             continue
+
+if __name__ == "__main__":
+    main()
